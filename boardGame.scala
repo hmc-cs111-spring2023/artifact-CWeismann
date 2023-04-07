@@ -1,5 +1,3 @@
-package boardGame
-
 import scala.collection.mutable.ListBuffer
 import scala.util.Random.shuffle as shuffleList
 
@@ -23,7 +21,7 @@ class Stack(cardList: ListBuffer[Card]) extends Location {
     var cards = cardList
     var count = cardList.length
 
-    def draw(player: Player): Unit = ???
+    def draw(player: Player): Unit = draw(player, 1)
     def draw(player: Player, num: Int): Unit =
         if this.cards == ListBuffer() then
             print("no cards")
@@ -32,16 +30,15 @@ class Stack(cardList: ListBuffer[Card]) extends Location {
             player.hand.cards += this.cards(0)
             this.cards = this.cards.tail
             this.count -= 1
-    def discard(index: Int, loc: Location): Unit = ???
+    def discard(index: Int, loc: Location): Unit = discard(index, loc, true)
     def discard(index: Int, loc: Location, face: Boolean): Unit =
         var card = this.cards(index)
         card.discard(loc, face)
-    def discardAll(loc: Location): Unit = ???
     def discardAll(loc: Location, face: Boolean): Unit =
         for card <- this.cards do
             card.isFaceUp = face
         this.moveTo(loc)
-    def discardAll(stack: Stack): Unit = ???
+    def discardAll(loc: Location): Unit = discardAll(loc, true)
     def discardAll(stack: Stack, face: Boolean): Unit =
         for card <- this.cards do
             card.isFaceUp = face
@@ -50,6 +47,7 @@ class Stack(cardList: ListBuffer[Card]) extends Location {
         stack.cards ++= this.cards
         this.count = 0
         this.cards = ListBuffer()
+    def discardAll(stack: Stack): Unit = discardAll(stack, true)
     def shuffle(): Unit =
         shuffleList(this.cards)
 }
@@ -99,12 +97,32 @@ class Player(n: String) {
         print(s"${this.name}'s known information")
         print(s"hand = ${this.hand.cards}")
 }
-class Action {
-
-}
-class Move {
-
-}
 class Game {
     var players = ListBuffer()
+
+    object ContinueException extends Exception
+    def continue = throw ContinueException
+
+    def round(count: Int)(body: => Unit): Unit = {
+        for i <- 0 to count do
+            try {
+                body
+                for player <- players do
+                    turn(player)
+            } catch {
+                case ContinueException => round(count-i)(body)
+            }
+    }
+    def round(condition: => Boolean)(body: => Unit): Unit = {
+        while (condition) {
+            try {
+                body
+                for player <- players do
+                    turn(player)
+            } catch {
+                case ContinueException => round(condition)(body)
+            }
+        }
+    }
+    def turn(player: Player): Unit = ???
 }
