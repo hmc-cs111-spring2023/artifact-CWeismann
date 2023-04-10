@@ -139,6 +139,15 @@ class Game {
         } catch {
             case BreakException => {}
         }
+    class prompt(query: String) {
+        def where(condition: String => Bool): String =
+            var name = ""
+            do {
+                println(prompt)
+                name = readLine()
+            } while (!condition(name));
+    }
+
     class deal(count: Int) {
         def from(deck: Stack): Unit =
             for player <- players do

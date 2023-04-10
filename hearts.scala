@@ -80,58 +80,51 @@ class HeartsGame(endScore: Int) extends CardGame {
     // game loop
     override def play() =
         round(true) {
-            eachPlayer(firstPlayer) {
+            // eachPlayer(firstPlayer) {
+            for player<-players do
                 if player.points >= endScore then
                     endRounds
-            }
+            // }
             deal(13) from deck
             //swapping would happen here
             //find player with 2 of clubs here
             var winningPlayer = players(0)
-            eachPlayer(firstPlayer) {
-                (player) => {
-                    for card <- player.hand.cards do
-                        if card.suit == CardSuit.Clubs and card.value == 2 then
-                            winningPlayer = player
-                }
-            }
+            // eachPlayer(firstPlayer) {
+            for player<-players do
+                for card <- player.hand.cards do
+                    if card.suit == CardSuit.Clubs and card.value == 2 then
+                        winningPlayer = player
+            // }
             round(firstPlayer.hand.count > 0) {
-                eachPlayer(firstPlayer) {
-                    (player: Player) => turn(player)
-                }
+                // eachPlayer(firstPlayer) {
+                for player<-players do
+                    turn
+                //}
+                playedCards = ListBuffer[Card]()
+                var currentPlayer = winningPlayer
+                currentPlayer.showInfo()
+                // var index = prompt "Which card [index] would you like to lead? "
+                //             where 
+                var index = 0
+                var invalidChoice = true
+                while validChoice
+                    print("Which card [index] would you like to lead? ")
+                    try {
+                        index = readLine.toInt()
+                    } catch {
+                        print("Please enter a number")
+                    }
+                    if currentPlayer.hand.cards(index).suit != CardSuit.Hearts then
+                        invalidChoice = true
+                    else self.heartsBroken then
+                        invalidChoice = true
+                    else
+                        if list(filter(lambda x: x.suit != CardSuit.Hearts, currentPlayer.hand.cards)) == [] then
+                            invalidChoice = true
+                        print("Hearts cannot be led until a Heart or the QS have been won")
+                winningCard = currentPlayer.hand.cards(index)
             }
         }
-        // while true:
-        //     for player <- self.players do
-        //         if player.points >= self.endScore then
-        //             gameOver = true
-        //         player.draw(self.deck, 13)		// magic num here for 4 players
-        //     if gameOver then
-        //         break
-        //     // swapping would happen here
-        //     // hand loop
-        //     // finding player with 2 of clubs would happen here
-        //     winningPlayer = self.players[0]
-        //     for player <- self.players do
-        //         for card <- player.hand.cards do
-        //             if card.suit == CardSuit.CLUBS and card.value == CardValue.TWO then
-        //                 winningPlayer = player
-        //     while len(self.players[0].hand.cards) != 0                   
-        //         self.playedCards = []
-        //         currentPlayer = winningPlayer
-        //         currentPlayer.showInfo(self)
-        //         // should not be able to lead hearts if not broken
-        //         while true
-        //             index = int(input(s"Which card [index] would you like to lead? "))
-        //             if currentPlayer.hand.cards[index].suit != CardSuit.HEARTS then
-        //                 break
-        //             else self.heartsBroken then
-        //                 break
-        //             else
-        //                 if list(filter(lambda x: x.suit != CardSuit.HEARTS, currentPlayer.hand.cards)) == [] then
-        //                     break
-        //                 print("Hearts cannot be led until a heart or the QS have been won")
-        //         winningCard = currentPlayer.hand.cards[index]
         //         self.playedCards += currentPlayer.hand.cards[index]
         //         currentPlayer.hand.cards.pop(index)
         //         for i <- range(len(self.players)-1) do
