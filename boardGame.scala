@@ -1,5 +1,6 @@
 import scala.collection.mutable.ListBuffer
 import scala.util.Random.shuffle as shuffleList
+import scala.io.StdIn.readLine
 
 class GameObject {
     // var name = n
