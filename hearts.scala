@@ -80,7 +80,7 @@ class HeartsGame(endScore: Int) extends CardGame {
             return false
 
     // override def round(condition: => Boolean)(body: => Unit): Unit = ???
-    override def turn(player: Player): Unit = ???
+    override def turn(player: HeartsPlayer): Unit = ???
 
     // ignoring player count deck modifications
     // game loop
@@ -181,7 +181,7 @@ class HeartsGame(endScore: Int) extends CardGame {
             deck.shuffle()
             heartsBroken = false
         }
-        var winner = HeartsPlayer()
+        var winner = HeartsPlayer("")
         winner.points = endScore + 26
         eachPlayer(firstPlayer) { player =>
             if player.points < winner.points then
