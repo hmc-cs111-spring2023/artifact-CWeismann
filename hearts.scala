@@ -8,33 +8,39 @@ enum CardSuit {
     case Diamonds
 }
 
+enum CardValue (value: Int) {
+    case Two extends CardValue(2)
+    case Three extends CardValue(3)
+    // etc.
+}
+
 class PlayingCard(suit: CardSuit, value: Int) extends Card {
     override def toString: String =
         var repStr = ""
         if value > 10 then
-            repStr = s"${List('J','Q','K','A')[value-11]}${suit.toString()(0)}"
+            repStr = s"${List('J','Q','K','A')(value-11)}${suit.toString()(0)}"
         else
             repStr = s"${value}${suit}"
         repStr
 }
 class CardGame extends Game {
     var cards = ListBuffer[PlayingCard]()
-    for suit <- CardSuit do
-        for value <- CardValue do
+    for suit <- CardSuit.values do
+        for value <- 2 to 13 do
             cards += PlayingCard(suit, value)
     var deck = Stack(cards)
     deck.shuffle()
 }
-class HeartsPlayer extends Player {
+class HeartsPlayer(name: String) extends Player {
     var wonCards = Stack(ListBuffer[PlayingCard])
     // var playedCard = Card()
     // def playCard() = ???
     def scoreStack() =
-        score = 0
-        for card <- self.wonCards.cards do
-            if card.suit == CardSuit.HEARTS then
+        var score = 0
+        for card <- wonCards.cards do
+            if card.suit == CardSuit.Hearts then
                 score += 1
-            else if card.suit == CardSuit.SPADES and card.value == CardValue.QUEEN then
+            else if card.suit == CardSuit.Spades and card.value == 12 then
                 score += 13
         return score
     // move to game?
@@ -49,7 +55,7 @@ class HeartsCard extends PlayingCard {
 }
 class HeartsGame(endScore: Int) extends CardGame {
     var heartsBroken = false
-    // self.playArea = Location()
+    // var playArea = Location()
     var player1 = HeartsPlayer("Alice")
     var player2 = HeartsPlayer("Bob")
     var player3 = HeartsPlayer("Carrie")
@@ -80,11 +86,10 @@ class HeartsGame(endScore: Int) extends CardGame {
     // game loop
     override def play() =
         round(true) {
-            // eachPlayer(firstPlayer) {
-            for player<-players do
+            eachPlayer(firstPlayer) { player =>
                 if player.points >= endScore then
                     endRounds
-            // }
+            }
             deal(13) from deck
             //swapping would happen here
             //find player with 2 of clubs here
@@ -96,18 +101,18 @@ class HeartsGame(endScore: Int) extends CardGame {
                         winningPlayer = player
             // }
             round(firstPlayer.hand.count > 0) {
-                // eachPlayer(firstPlayer) {
-                for player<-players do
+                eachPlayer(firstPlayer) {
                     turn
-                //}
+                }
                 playedCards = ListBuffer[Card]()
                 var currentPlayer = winningPlayer
                 currentPlayer.showInfo()
                 // var index = prompt "Which card [index] would you like to lead? "
                 //             where 
+                // REPLACE BELOW WITH PROMPT
                 var index = 0
                 var invalidChoice = true
-                while validChoice
+                while invalidChoice do
                     print("Which card [index] would you like to lead? ")
                     try {
                         index = readLine.toInt()
@@ -116,59 +121,73 @@ class HeartsGame(endScore: Int) extends CardGame {
                     }
                     if currentPlayer.hand.cards(index).suit != CardSuit.Hearts then
                         invalidChoice = true
-                    else self.heartsBroken then
+                    else if heartsBroken then
                         invalidChoice = true
                     else
-                        if list(filter(lambda x: x.suit != CardSuit.Hearts, currentPlayer.hand.cards)) == [] then
+                        if currentPlayer.hand.cards.filter(_.suit != CardSuit.Hearts).isEmpty then
                             invalidChoice = true
                         print("Hearts cannot be led until a Heart or the QS have been won")
                 winningCard = currentPlayer.hand.cards(index)
+                playedCards += winningCard
+                currentPlayer.hand.cards.remove(index)
+                eachPlayer(currentPlayer.nextPlayer) { player =>
+                    if player == winningPlayer then
+                        skipRest
+                    player.showInfo(this)
+                    // should be forced to follow if possible
+                    // some prompt nonsense here instead of this
+                    index = 0
+                    invalidChoice = true
+                    while invalidChoice do
+                        print("Which card [index] would you like to play? ")
+                        try {
+                            index = readLine.toInt()
+                        } catch {
+                            print("Please enter a number")
+                        }
+                        if currentPlayer.hand.cards[index].suit == winningCard.suit then
+                            invalidChoice = false
+                        if currentPlayer.hand.cards.filter(_.suit == winningCard.suit).isEmpty then
+                            invalidChoice = false
+                        print("You must follow suit if possible")
+                    playedCard = currentPlayer.hand.cards(index)
+                    if playedCard.suit == CardSuit.HEARTS then
+                        heartsBroken = true
+                    else if playedCard.suit == CardSuit.Spades and playedCard.value == 12 then
+                        heartsBroken = true
+                    playedCards += playedCard
+                    currentPlayer.hand.cards.remove(index)
+                    if beats(playedCard, winningCard, winningCard.suit) then
+                        winningCard = playedCard
+                        winningPlayer = currentPlayer
+                }
+                for wonCard <- playedCards do
+                    wonCard.discard(winningPlayer.wonCards, false)
             }
+            eachPlayer(firstPlayer) { player =>
+                var score = player.scoreStack()
+                player.wonCards.discardAll(deck, false)
+                if score == 26 then
+                    player.points -= 26
+                    eachPlayer(firstPlayer) { player =>
+                        player.points += 26
+                    }
+                else
+                    player.points += score
+            }
+            eachPlayer(firstPlayer) { player =>
+                print(s"${player.name} Score: ${player.points}")
+            }
+            deck.shuffle()
+            heartsBroken = false
         }
-        //         self.playedCards += currentPlayer.hand.cards[index]
-        //         currentPlayer.hand.cards.pop(index)
-        //         for i <- range(len(self.players)-1) do
-        //             currentPlayer = currentPlayer.nextPlayer
-        //             currentPlayer.showInfo(self)
-        //             // should be forced to follow if possible
-        //             while true
-        //                 index = int(input(s"Which card [index] would you like to play? "))
-        //                 if currentPlayer.hand.cards[index].suit == winningCard.suit then
-        //                     break
-        //                 if list(filter(lambda x: x.suit == winningCard.suit, currentPlayer.hand.cards)) == [] then
-        //                     break
-        //                 print("You must follow suit if possible")
-        //             playedCard = currentPlayer.hand.cards[index]
-        //             if playedCard.suit == CardSuit.HEARTS then
-        //                 self.heartsBroken = true
-        //             else if playedCard.suit == CardSuit.SPADES and playedCard.value == CardValue.QUEEN:
-        //                 self.heartsBroken = true
-        //             self.playedCards += currentPlayer.hand.cards[index]
-        //             currentPlayer.hand.cards.pop(index)
-        //             if self.beats(self.playedCards[-1], winningCard, winningCard.suit) then
-        //                 winningCard = self.playedCards[-1]
-        //                 winningPlayer = currentPlayer
-        //         for wonCard <- self.playedCards do
-        //             wonCard.discard(winningPlayer.wonCards, false)
-        //     for player <- self.players do
-        //         score = player.scoreStack()
-        //         player.wonCards.discardAll(self.deck, false)
-        //         if score == 26 then
-        //             player.points -= 26
-        //             for p <- self.players do
-        //                 p.points += 26
-        //         else
-        //             player.points += score
-        //     for player <- self.players do
-        //         print(s"${player.name} Score: ${player.points}")
-        //     self.deck.shuffle()
-        //     self.heartsBroken = false
-        // var winner = HeartsPlayer()
-        // winner.points = self.endScore + 26
-        // for player <- self.players do
-        //     if player.points < winner.points then
-        //         winner = player
-        // print(s"Winner: ${winner.name}")
+        var winner = HeartsPlayer()
+        winner.points = endScore + 26
+        eachPlayer(firstPlayer) { player =>
+            if player.points < winner.points then
+                winner = player
+        }
+        print(s"Winner: ${winner.name}")
 }
 
 @main

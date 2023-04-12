@@ -73,8 +73,7 @@ class Card extends GameObject {		// replace with another name?
 class Piece extends GameObject {
 
 }
-class Player(n: String) {
-    var name = n
+class Player(name: String) {
     // var opponents = ListBuffer()
     // var teammates = ListBuffer()
     var hand = Stack(ListBuffer())
@@ -105,12 +104,19 @@ class Game {
 
     var players = ListBuffer[Player]()
 
-    def eachPlayer(startingWith: Player)(body: => Unit): Unit =
-        var player = startingWith
-        do {
-            body
+    def skipRest = throw BreakException
+    def eachPlayer(startingWith: Player)(body: Player => Unit): Unit =
+        try {
+            var player = startingWith
+            body(player)
             player = player.nextPlayer
-        } while (player != startingWith)
+            while (player != startingWith) {
+                body(player)
+                player = player.nextPlayer
+            }
+        } catch {
+            case BreakException => {}
+        }
 
     def newRound = throw ContinueException
     def endRounds = throw BreakException
@@ -141,12 +147,15 @@ class Game {
             case BreakException => {}
         }
     class prompt(query: String) {
-        def where(condition: String => Bool): String =
+        def where(condition: String => Boolean): String =
             var name = ""
-            do {
-                println(prompt)
+            println(query)
+            name = readLine()
+            while (!condition(name)) {
+                println(query)
                 name = readLine()
-            } while (!condition(name));
+            }
+            name
     }
 
     class deal(count: Int) {
