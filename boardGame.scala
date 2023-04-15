@@ -9,16 +9,17 @@ class GameObject {
     var visibleTo = ListBuffer[Player]()
     
     def flip() =
-        this.isFaceUp = !this.isFaceUp
+        isFaceUp = !isFaceUp
     def moveTo(loc: Location) =
-        this.location = loc
+        location = loc
     
 }
 class Location extends GameObject {
-    // var items = ListBuffer[GameObject]()
+    // var items = ListBuffer[+GameObject]()
     
 }
-class Stack(cardList: ListBuffer[Card]) extends Location {
+class Stack[C <: Card](cardList: ListBuffer[C]) extends Location {
+    def this() = this(ListBuffer[C]())
     var cards = cardList
     var count = cardList.length
     // alternative empty constructor
@@ -40,7 +41,7 @@ class Stack(cardList: ListBuffer[Card]) extends Location {
             card.isFaceUp = face
         this.moveTo(loc)
     def discardAll(loc: Location): Unit = discardAll(loc, true)
-    def discardAll(stack: Stack, face: Boolean): Unit =
+    def discardAll(stack: Stack[C], face: Boolean): Unit =
         for card <- this.cards do
             card.isFaceUp = face
         this.moveTo(stack)
@@ -48,7 +49,7 @@ class Stack(cardList: ListBuffer[Card]) extends Location {
         stack.cards ++= this.cards
         this.count = 0
         this.cards = ListBuffer()
-    def discardAll(stack: Stack): Unit = discardAll(stack, true)
+    def discardAll(stack: Stack[C]): Unit = discardAll(stack, true)
     def findCard(): Unit = ???
     def shuffle(): Unit =
         shuffleList(this.cards)
@@ -61,8 +62,8 @@ class Card extends GameObject {		// replace with another name?
     def discard(loc: Location, face: Boolean): Unit =
         this.isFaceUp = face
         this.moveTo(loc)
-    def discard(stack: Stack): Unit = discard(stack, true)
-    def discard(stack: Stack, face: Boolean): Unit =
+    def discard(stack: Stack[Card]): Unit = discard(stack, true)
+    def discard(stack: Stack[Card], face: Boolean): Unit =
         this.isFaceUp = face
         this.moveTo(stack)
         stack.cards += this
@@ -70,24 +71,27 @@ class Card extends GameObject {		// replace with another name?
     // needs better handling of face up/down?
     // possibly some separate Face class?
 }
+type AnyCard <: Card
+
 class Piece extends GameObject {
 
 }
-class Player(name: String) {
+class Player(_name: String) {
     // var opponents = ListBuffer()
     // var teammates = ListBuffer()
-    var hand = Stack(ListBuffer())
+    var name = _name
+    var hand = Stack[Card]()
     var playArea = Location()
     var points = 0
-    var nextPlayer = this
+    var nextPlayer: Player = null
     // will be very difficult to implement
     var validActions = ListBuffer()
 
     def take(item: GameObject) = ???
         // item.location = this.hand
         // more...
-    def draw(stack: Stack): Unit = draw(stack, 1)
-    def draw(stack: Stack, count: Int): Unit =
+    def draw(stack: Stack[AnyCard]): Unit = draw(stack, 1)
+    def draw(stack: Stack[AnyCard], count: Int): Unit =
         for i <- 0 to count do
             stack.cards(0).location = this.hand
             this.hand.cards += stack.cards(0)
@@ -98,14 +102,15 @@ class Player(name: String) {
         print(s"${this.name}'s known information")
         print(s"hand = ${this.hand.cards}")
 }
-class Game {
+// type AnyPlayer <: Player
+class Game[P <: Player] {
     object ContinueException extends Exception
     object BreakException extends Exception
 
-    var players = ListBuffer[Player]()
+    var players = ListBuffer[P]()
 
     def skipRest = throw BreakException
-    def eachPlayer(startingWith: Player)(body: Player => Unit): Unit =
+    def eachPlayer(startingWith: P)(body: P => Unit): Unit =
         try {
             var player = startingWith
             body(player)
@@ -138,9 +143,9 @@ class Game {
                 case BreakException => round(false)(body)
             }
         }
-    
+    // not sure about this
     def endTurn = throw BreakException
-    def turn(player: Player)(body: => Unit): Unit = 
+    def turn(player: P)(body: => Unit): Unit = 
         try {
             body
         } catch {
@@ -159,7 +164,7 @@ class Game {
     }
 
     class deal(count: Int) {
-        def from(deck: Stack): Unit =
+        def from(deck: Stack[AnyCard]): Unit =
             for player <- players do
                 player.draw(deck, count)
     }

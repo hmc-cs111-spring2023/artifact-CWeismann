@@ -1,3 +1,5 @@
+// DOES NOT WORK -- DEPRECATED
+
 // from boardGame import *
 // from enum import Enum
 
@@ -14,9 +16,12 @@ enum CardValue (value: Int) {
     // etc.
 }
 
-class PlayingCard(_suit: CardSuit, _value: Int) extends Card {
-    val suit = _suit
-    val value = _value
+extension (c: Card) {
+    var suit = CardSuit.Spades
+    var value = 14
+    this(_suit: CardSuit, _value: Int) =
+        suit = _suit
+        value = _value
     override def toString: String =
         var repStr = ""
         if value > 10 then
@@ -25,17 +30,9 @@ class PlayingCard(_suit: CardSuit, _value: Int) extends Card {
             repStr = s"${value}${suit}"
         repStr
 }
-class CardGame[P] extends Game[P] {
-    var cards = ListBuffer[PlayingCard]()
-    for suit <- CardSuit.values do
-        for value <- 2 to 13 do
-            cards += PlayingCard(suit, value)
-    var deck = Stack[PlayingCard](cards)
-    deck.shuffle()
-}
-class HeartsPlayer(name: String) extends Player(name: String) {
-    var wonCards = Stack[PlayingCard]()
-    var nextPlayer = this
+
+extension (p: Player) {
+    var wonCards = Stack()
     // var playedCard = Card()
     // def playCard() = ???
     def scoreStack() =
@@ -43,9 +40,9 @@ class HeartsPlayer(name: String) extends Player(name: String) {
         for card <- wonCards.cards do
             if card.suit == CardSuit.Hearts then
                 score += 1
-            else if card.suit == CardSuit.Spades && card.value == 12 then
+            else if card.suit == CardSuit.Spades and card.value == 12 then
                 score += 13
-        score
+        return score
     // move to game?
     def showInfo(game: HeartsGame) =
         super.showInfo()
@@ -53,29 +50,37 @@ class HeartsPlayer(name: String) extends Player(name: String) {
             print(s"${player.name} has won ${player.wonCards.count} cards")
         print(s"So far, the cards played have been ${game.playedCards}")
 }
-class HeartsCard extends PlayingCard {
 
-}
-class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
+extension (g: Game) {
+    var endScore = 50
     var heartsBroken = false
+    this(_endScore: Int) =
+        endsScore = _endScore
+
+    for suit <- CardSuit.values do
+        for value <- 2 to 14 do
+            cards += PlayingCard(suit, value)
+    var deck = Stack(cards)
+    deck.shuffle()
+    
     // var playArea = Location()
     var player1 = HeartsPlayer("Alice")
     var player2 = HeartsPlayer("Bob")
     var player3 = HeartsPlayer("Carrie")
     var player4 = HeartsPlayer("David")
-    player1.nextPlayer = player2
-    player2.nextPlayer = player3
-    player3.nextPlayer = player4
-    player4.nextPlayer = player1
+    var player1.nextPlayer = player2
+    var player2.nextPlayer = player3
+    var player3.nextPlayer = player4
+    var player4.nextPlayer = player1
     // necessary?
-    players = ListBuffer[HeartsPlayer](player1, player2, player3, player4)
+    val players = List(player1, player2, player3, player4)
     val firstPlayer = players(0)
     var playedCards = ListBuffer[PlayingCard]()
     
-    def beats(card: PlayingCard, other: PlayingCard, lead: CardSuit): Boolean =
-        if card.suit == lead && other.suit != lead then
+    def beats(card: Card, other: Card, lead: CardSuit) =
+        if card.suit == lead and other.suit != lead then
             return true
-        else if card.suit != lead && other.suit == lead then
+        else if card.suit != lead and other.suit == lead then
             return false
         else if card.value > other.value then
             return true
@@ -100,7 +105,7 @@ class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
             // eachPlayer(firstPlayer) {
             for player<-players do
                 for card <- player.hand.cards do
-                    if card.suit == CardSuit.Clubs && card.value == 2 then
+                    if card.suit == CardSuit.Clubs and card.value == 2 then
                         winningPlayer = player
             // }
             round(firstPlayer.hand.count > 0) {
@@ -120,7 +125,7 @@ class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
                     try {
                         index = readLine.toInt
                     } catch {
-                        print("Please enter a number ")
+                        print("Please enter a number")
                     }
                     if currentPlayer.hand.cards(index).suit != CardSuit.Hearts then
                         invalidChoice = true
@@ -130,7 +135,7 @@ class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
                         if currentPlayer.hand.cards.filter(_.suit != CardSuit.Hearts).isEmpty then
                             invalidChoice = true
                         print("Hearts cannot be led until a Heart or the QS have been won")
-                var winningCard = currentPlayer.hand.cards(index)
+                winningCard = currentPlayer.hand.cards(index)
                 playedCards += winningCard
                 currentPlayer.hand.cards.remove(index)
                 eachPlayer(currentPlayer.nextPlayer) { player =>
@@ -156,7 +161,7 @@ class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
                     playedCard = currentPlayer.hand.cards(index)
                     if playedCard.suit == CardSuit.HEARTS then
                         heartsBroken = true
-                    else if playedCard.suit == CardSuit.Spades && playedCard.value == 12 then
+                    else if playedCard.suit == CardSuit.Spades and playedCard.value == 12 then
                         heartsBroken = true
                     playedCards += playedCard
                     currentPlayer.hand.cards.remove(index)
