@@ -25,26 +25,26 @@ class PlayingCard(_suit: CardSuit, _value: Int) extends Card {
             repStr = s"${value}${suit}"
         repStr
 }
-class CardGame[P <: Player] extends Game[P] {
-    var cards = ListBuffer[PlayingCard]()
+class CardGame extends Game {
+    var cards = ListBuffer[Card]()
     for suit <- CardSuit.values do
         for value <- 2 to 13 do
             cards += PlayingCard(suit, value)
-    var deck = Stack[PlayingCard](cards)
+    var deck = Stack(cards)
     deck.shuffle()
 }
 class HeartsPlayer(_name: String) extends Player(_name: String) {
     // var name = _name
-    var wonCards = Stack[PlayingCard]()
+    var wonCards = Stack()
     // var nextPlayer: HeartsPlayer = HeartsPlayer("")
-    var playingCardHand = Stack[PlayingCard]()
+    var playingCardHand = Stack()
     // def this(player: Player) =
     //     var name = player.name
-    //     var wonCards = Stack[PlayingCard]()
+    //     var wonCards = Stack()
     //     var nextPlayer = 
     // var playedCard = Card()
     // def playCard() = ???
-    def scoreStack() =
+    def scoreStack(): Int =
         var score = 0
         for card <- wonCards.cards do
             if card.suit == CardSuit.Hearts then
@@ -64,7 +64,7 @@ class HeartsPlayer(_name: String) extends Player(_name: String) {
 // class HeartsCard extends PlayingCard {
 
 // }
-class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
+class HeartsGame(endScore: Int) extends CardGame {
     var heartsBroken = false
     // var playArea = Location()
     var player1 = HeartsPlayer("Alice")

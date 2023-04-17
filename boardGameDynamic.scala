@@ -28,8 +28,8 @@ class Location extends GameObject, Dynamic {
     // var items = ListBuffer[+GameObject]()
     
 }
-class Stack[C <: Card](cardList: ListBuffer[C]) extends Location, Dynamic {
-    def this() = this(ListBuffer[C]())
+class Stack(cardList: ListBuffer[Card]) extends Location, Dynamic {
+    def this() = this(ListBuffer[Card]())
     var cards = cardList
     var count = cardList.length
     // alternative empty constructor
@@ -51,7 +51,7 @@ class Stack[C <: Card](cardList: ListBuffer[C]) extends Location, Dynamic {
             card.isFaceUp = face
         this.moveTo(loc)
     def discardAll(loc: Location): Unit = discardAll(loc, true)
-    def discardAll(stack: Stack[C], face: Boolean): Unit =
+    def discardAll(stack: Stack, face: Boolean): Unit =
         for card <- this.cards do
             card.isFaceUp = face
         this.moveTo(stack)
@@ -59,7 +59,7 @@ class Stack[C <: Card](cardList: ListBuffer[C]) extends Location, Dynamic {
         stack.cards ++= this.cards
         this.count = 0
         this.cards = ListBuffer()
-    def discardAll(stack: Stack[C]): Unit = discardAll(stack, true)
+    def discardAll(stack: Stack): Unit = discardAll(stack, true)
     def findCard(): Unit = ???
     def shuffle(): Unit =
         shuffleList(this.cards)
@@ -72,8 +72,8 @@ class Card extends GameObject, Dynamic {		// replace with another name?
     def discard(loc: Location, face: Boolean): Unit =
         this.isFaceUp = face
         this.moveTo(loc)
-    def discard(stack: Stack[Card]): Unit = discard(stack, true)
-    def discard(stack: Stack[Card], face: Boolean): Unit =
+    def discard(stack: Stack): Unit = discard(stack, true)
+    def discard(stack: Stack, face: Boolean): Unit =
         this.isFaceUp = face
         this.moveTo(stack)
         stack.cards += this
@@ -81,7 +81,7 @@ class Card extends GameObject, Dynamic {		// replace with another name?
     // needs better handling of face up/down?
     // possibly some separate Face class?
 }
-type AnyCard <: Card
+// type AnyCard <: Card
 
 class Piece extends GameObject, Dynamic {
 
@@ -99,7 +99,7 @@ class Player(_name: String) extends Dynamic {
     def applyDynamicNamed(name: String)(args: (String, Any)*) =
         s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
     var name = _name
-    var hand = Stack[Card]()
+    var hand = Stack()
     var playArea = Location()
     var points = 0
     var nextPlayer = this
@@ -109,20 +109,20 @@ class Player(_name: String) extends Dynamic {
     def take(item: GameObject) = ???
         // item.location = this.hand
         // more...
-    def draw(stack: Stack[Card]): Unit = draw(stack, 1)
-    def draw(stack: Stack[Card], count: Int): Unit =
+    def draw(stack: Stack): Unit = draw(stack, 1)
+    def draw(stack: Stack, count: Int): Unit =
         for i <- 0 to count do
             stack.cards(0).location = this.hand
             this.hand.cards += stack.cards(0)
             stack.cards = stack.cards.tail
             stack.count -= 1
-    def showInfo(game: Game[Player]): Unit =
+    def showInfo(game: Game): Unit =
         // shows everything that the player can see
         print(s"${this.name}'s known information")
         print(s"hand = ${this.hand.cards}")
 }
 // type AnyPlayer <: Player
-class Game[P <: Player] extends Dynamic {
+class Game extends Dynamic {
     object ContinueException extends Exception
     object BreakException extends Exception
     var map = Map.empty[String, Any]
@@ -135,7 +135,7 @@ class Game[P <: Player] extends Dynamic {
     def applyDynamicNamed(name: String)(args: (String, Any)*) =
         s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
 
-    var players = ListBuffer[P]()
+    var players = ListBuffer[Player]()
 
     def skipRest = throw BreakException
     def eachPlayer(startingWith: Player)(body: Player => Unit): Unit =
@@ -173,7 +173,7 @@ class Game[P <: Player] extends Dynamic {
         }
     // not sure about this
     def endTurn = throw BreakException
-    def turn(player: P)(body: => Unit): Unit = 
+    def turn(player: Player)(body: => Unit): Unit = 
         try {
             body
         } catch {
@@ -192,7 +192,7 @@ class Game[P <: Player] extends Dynamic {
     }
 
     class deal(count: Int) {
-        def from(deck: Stack[Card]): Unit =
+        def from(deck: Stack): Unit =
             for player <- players do
                 player.draw(deck, count)
     }
