@@ -1,22 +1,14 @@
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Map
 import scala.util.Random.shuffle as shuffleList
 import scala.io.StdIn.readLine
-import scala.language.dynamics
 
-class GameObject extends Dynamic {
+class GameObject {
     // var name = n
-    var map = Map.empty[String, Any]
-    def selectDynamic(name: String) =
-        map get name getOrElse sys.error("method not found")
-    def updateDynamic(name: String)(value: Any) =
-        map += name -> value
-    def applyDynamic(name: String)(args: Any*) =
-        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
-    def applyDynamicNamed(name: String)(args: (String, Any)*) =
-        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
     var isFaceUp = false
     var location = this
     var visibleTo = ListBuffer[Player]()
+    var data = Map[String, Any]()
     
     def flip() =
         isFaceUp = !isFaceUp
@@ -24,11 +16,11 @@ class GameObject extends Dynamic {
         location = loc
     
 }
-class Location extends GameObject, Dynamic {
+class Location extends GameObject {
     // var items = ListBuffer[+GameObject]()
     
 }
-class Stack(cardList: ListBuffer[Card]) extends Location, Dynamic {
+class Stack(cardList: ListBuffer[Card]) extends Location {
     def this() = this(ListBuffer[Card]())
     var cards = cardList
     var count = cardList.length
@@ -37,7 +29,7 @@ class Stack(cardList: ListBuffer[Card]) extends Location, Dynamic {
     def draw(player: Player, num: Int): Unit =
         if this.cards == ListBuffer() then
             print("no cards")
-        for i <- 0 to num.min(this.count) do
+        for i <- 0 to num do
             this.cards(0).location = player.hand
             player.hand.cards += this.cards(0)
             this.cards = this.cards.tail
@@ -64,10 +56,10 @@ class Stack(cardList: ListBuffer[Card]) extends Location, Dynamic {
     def shuffle(): Unit =
         shuffleList(this.cards)
 }
-class Board extends Location, Dynamic {
+class Board extends Location {
 
 }
-class Card extends GameObject, Dynamic {		// replace with another name?
+class Card extends GameObject {		// replace with another name?
     def discard(loc: Location): Unit = discard(loc, true)
     def discard(loc: Location, face: Boolean): Unit =
         this.isFaceUp = face
@@ -83,21 +75,13 @@ class Card extends GameObject, Dynamic {		// replace with another name?
 }
 // type AnyCard <: Card
 
-class Piece extends GameObject, Dynamic {
+class Piece extends GameObject {
 
 }
-class Player(_name: String) extends Dynamic {
+class Player(_name: String) {
     // var opponents = ListBuffer()
     // var teammates = ListBuffer()
-    var map = Map.empty[String, Any]
-    def selectDynamic(name: String) =
-        map get name getOrElse sys.error("method not found")
-    def updateDynamic(name: String)(value: Any) =
-        map += name -> value
-    def applyDynamic(name: String)(args: Any*) =
-        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
-    def applyDynamicNamed(name: String)(args: (String, Any)*) =
-        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
+    var data = Map[String, Any]()
     var name = _name
     var hand = Stack()
     var playArea = Location()
@@ -122,19 +106,11 @@ class Player(_name: String) extends Dynamic {
         print(s"hand = ${this.hand.cards}")
 }
 // type AnyPlayer <: Player
-class Game extends Dynamic {
+class Game {
     object ContinueException extends Exception
     object BreakException extends Exception
-    var map = Map.empty[String, Any]
-    def selectDynamic(name: String) =
-        map get name getOrElse sys.error("method not found")
-    def updateDynamic(name: String)(value: Any) =
-        map += name -> value
-    def applyDynamic(name: String)(args: Any*) =
-        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
-    def applyDynamicNamed(name: String)(args: (String, Any)*) =
-        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
 
+    var data = Map[String, Any]()
     var players = ListBuffer[Player]()
 
     def skipRest = throw BreakException

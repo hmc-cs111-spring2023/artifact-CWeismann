@@ -1,3 +1,5 @@
+// package boardgame
+
 import scala.collection.mutable.ListBuffer
 import scala.util.Random.shuffle as shuffleList
 import scala.io.StdIn.readLine
@@ -35,13 +37,15 @@ class Stack[C <: Card](cardList: ListBuffer[C]) extends Location, Dynamic {
     // alternative empty constructor
     def draw(player: Player): Unit = draw(player, 1)
     def draw(player: Player, num: Int): Unit =
-        if this.cards == ListBuffer() then
+        if this.cards.isEmpty then
             print("no cards")
-        for i <- 0 to num.min(this.count) do
-            this.cards(0).location = player.hand
-            player.hand.cards += this.cards(0)
-            this.cards = this.cards.tail
-            this.count -= 1
+        for i <- 0 to num do
+            cards(0).location = player.hand
+            player.hand.cards += cards(0)
+            print("drawn")
+            player.hand.count += 1
+            cards = cards.tail
+            count -= 1
     def discard(index: Int, loc: Location): Unit = discard(index, loc, true)
     def discard(index: Int, loc: Location, face: Boolean): Unit =
         var card = this.cards(index)
@@ -86,7 +90,7 @@ type AnyCard <: Card
 class Piece extends GameObject, Dynamic {
 
 }
-class Player(_name: String) extends Dynamic {
+abstract class Player(_name: String) extends Dynamic {
     // var opponents = ListBuffer()
     // var teammates = ListBuffer()
     var map = Map.empty[String, Any]
@@ -102,7 +106,7 @@ class Player(_name: String) extends Dynamic {
     var hand = Stack[Card]()
     var playArea = Location()
     var points = 0
-    var nextPlayer = this
+    var nextPlayer: Player
     // will be very difficult to implement
     var validActions = ListBuffer()
 
@@ -155,21 +159,30 @@ class Game[P <: Player] extends Dynamic {
     def endRounds = throw BreakException
     // reimplement using second definition and an iterator?
     def round(count: Int)(body: => Unit): Unit =
-        for i <- 0 to count do
-            try {
-                body
-            } catch {
-                case ContinueException => round(count-i)(body)
-                case BreakException => round(0)(body)
-            }
+        var i = 0
+        try {
+            while i < count do
+                try {
+                    body
+                    i += 1
+                } catch {
+                    case ContinueException => i += 1
+                }
+        } catch {
+            case BreakException => i = count
+        }
     def round(condition: => Boolean)(body: => Unit): Unit =
-        while (condition) {
-            try {
-                body
-            } catch {
-                case ContinueException => round(condition)(body)
-                case BreakException => round(false)(body)
+        var cond = condition
+        try {
+            while (cond) {
+                try {
+                    body
+                } catch {
+                    case ContinueException => round(condition)(body)
+                }
             }
+        } catch {
+            case BreakException => cond = false
         }
     // not sure about this
     def endTurn = throw BreakException
