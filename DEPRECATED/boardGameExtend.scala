@@ -3,12 +3,19 @@ import scala.collection.mutable.Map
 import scala.util.Random.shuffle as shuffleList
 import scala.io.StdIn.readLine
 
-class GameObject {
-    // var name = n
+class GameObject extends Dynamic {
+    var map = Map.empty[String, Any]
+    def selectDynamic(name: String) =
+        map get name getOrElse sys.error("method not found")
+    def updateDynamic(name: String)(value: Any) =
+        map += name -> value
+    def applyDynamic(name: String)(args: Any*) =
+        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
+    def applyDynamicNamed(name: String)(args: (String, Any)*) =
+        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
     var isFaceUp = false
     var location = this
     var visibleTo = ListBuffer[Player]()
-    var data = Map[String, Any]()
     
     def flip() =
         isFaceUp = !isFaceUp
@@ -78,10 +85,18 @@ class Card extends GameObject {		// replace with another name?
 class Piece extends GameObject {
 
 }
-class Player(_name: String) {
+class Player(_name: String) extends Dynamic {
+    var map = Map.empty[String, Any]
+    def selectDynamic(name: String) =
+        map get name getOrElse sys.error("method not found")
+    def updateDynamic(name: String)(value: Any) =
+        map += name -> value
+    def applyDynamic(name: String)(args: Any*) =
+        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
+    def applyDynamicNamed(name: String)(args: (String, Any)*) =
+        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
     // var opponents = ListBuffer()
     // var teammates = ListBuffer()
-    var data = Map[String, Any]()
     var name = _name
     var hand = Stack()
     var playArea = Location()
@@ -106,11 +121,19 @@ class Player(_name: String) {
         print(s"hand = ${this.hand.cards}")
 }
 // type AnyPlayer <: Player
-class Game {
+class Game extends Dynamic {
+    var map = Map.empty[String, Any]
+    def selectDynamic(name: String) =
+        map get name getOrElse sys.error("method not found")
+    def updateDynamic(name: String)(value: Any) =
+        map += name -> value
+    def applyDynamic(name: String)(args: Any*) =
+        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
+    def applyDynamicNamed(name: String)(args: (String, Any)*) =
+        s"method '$name' called with arguments ${args.mkString("'", "', '", "'")}"
     object ContinueException extends Exception
     object BreakException extends Exception
 
-    var data = Map[String, Any]()
     var players = ListBuffer[Player]()
 
     def skipRest = throw BreakException
@@ -131,21 +154,29 @@ class Game {
     def endRounds = throw BreakException
     // reimplement using second definition and an iterator?
     def round(count: Int)(body: => Unit): Unit =
-        for i <- 0 to count do
-            try {
-                body
-            } catch {
-                case ContinueException => round(count-i)(body)
-                case BreakException => round(0)(body)
-            }
+        var i = 0
+        try {
+            while i < count do
+                try {
+                    body
+                    i += 1
+                } catch {
+                    case ContinueException => i += 1
+                }
+        } catch {
+            case BreakException => i = count
+        }
     def round(condition: => Boolean)(body: => Unit): Unit =
-        while (condition) {
-            try {
-                body
-            } catch {
-                case ContinueException => round(condition)(body)
-                case BreakException => round(false)(body)
+        try {
+            while (condition) {
+                try {
+                    body
+                } catch {
+                    case ContinueException => round(condition)(body)
+                }
             }
+        } catch {
+            case BreakException => {}
         }
     // not sure about this
     def endTurn = throw BreakException
