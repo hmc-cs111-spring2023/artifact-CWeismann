@@ -1,5 +1,5 @@
 // package boardgame
-// For future exploration: 
+// For future exploration: https://alvinalexander.com/scala/how-to-use-duck-typing-in-scala-structural-types/
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Random.shuffle as shuffleList
