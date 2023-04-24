@@ -1,4 +1,5 @@
 // package boardgame
+// For future exploration: 
 
 import scala.collection.mutable.ListBuffer
 import scala.util.Random.shuffle as shuffleList
