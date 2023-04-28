@@ -105,9 +105,9 @@ class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
     // ignoring player count deck modifications
     // game loop
     override def play() =
-        var q = true
-        round(q) {
-            q = false
+        // var q = true
+        round(true) {
+            // q = false
             eachPlayer(firstPlayer) { player =>
                 if player.points >= endScore then
                     endRounds
@@ -154,6 +154,7 @@ class HeartsGame(endScore: Int) extends CardGame[HeartsPlayer] {
                 var winningCard = winningPlayer.hand.cards(index)
                 playedCards += winningCard
                 winningPlayer.hand.cards.remove(index)
+                // HUGE BUG HERE UNTIL EACHPLAYER FIXED
                 for player <- players do
                 // eachPlayer(winningPlayer.nextPlayer) { player =>
                     if player == winningPlayer then
